@@ -1,15 +1,32 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
-export const Container = styled.div`
+export const Container = styled.div<{
+  noData?: boolean;
+  statementCard?: boolean;
+}>`
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
+
+  ${({ noData }) =>
+    !noData &&
+    css`
+      align-items: center;
+      justify-content: space-between;
+    `}
 
   background-color: ${({ theme }) => theme.white};
 
   width: 100%;
-  height: 330px;
+
+  /* For the table not to overlap the card */
+  ${({ statementCard }) =>
+    statementCard
+      ? css`
+          min-height: 330px;
+        `
+      : css`
+          height: 330px;
+        `}
 
   border-radius: 1rem;
 

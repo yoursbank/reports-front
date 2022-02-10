@@ -8,11 +8,20 @@ interface ICardProps {
   title?: string;
   subtitle?: string;
   children: ReactNode;
+
+  noData?: boolean;
+  statementCard?: boolean;
 }
 
-const Card = ({ title, subtitle, children }: ICardProps) => {
+const Card = ({
+  title,
+  subtitle,
+  noData,
+  statementCard,
+  children,
+}: ICardProps) => {
   return (
-    <Container>
+    <Container noData={noData} statementCard={statementCard}>
       {!!title && !!subtitle && (
         <Header>
           <Title>{title}</Title>
