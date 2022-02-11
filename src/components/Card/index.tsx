@@ -1,7 +1,10 @@
 import { ReactNode } from 'react';
 
+// Component import
+import { EmptyText } from '..';
+
 // Style import
-import { Container, Header, Title, Subtitle } from './styles';
+import { Container, Header, Title, Subtitle, Content } from './styles';
 
 // Interface
 interface ICardProps {
@@ -9,19 +12,12 @@ interface ICardProps {
   subtitle?: string;
   children: ReactNode;
 
-  noData?: boolean;
   statementCard?: boolean;
 }
 
-const Card = ({
-  title,
-  subtitle,
-  noData,
-  statementCard,
-  children,
-}: ICardProps) => {
+const Card = ({ title, subtitle, statementCard, children }: ICardProps) => {
   return (
-    <Container noData={noData} statementCard={statementCard}>
+    <Container statementCard={statementCard}>
       {!!title && !!subtitle && (
         <Header>
           <Title>{title}</Title>
@@ -29,7 +25,7 @@ const Card = ({
         </Header>
       )}
 
-      {children}
+      <Content>{children || <EmptyText />}</Content>
     </Container>
   );
 };

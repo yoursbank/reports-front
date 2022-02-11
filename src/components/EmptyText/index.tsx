@@ -1,5 +1,6 @@
 import React from 'react';
 
+// Style import
 import { Text } from './styles';
 
 const EmptyText: React.FC = () => {

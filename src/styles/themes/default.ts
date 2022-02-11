@@ -10,6 +10,7 @@ const ThemeDefault: DefaultTheme = {
   lightGray: '#F2F2F2',
   gray: '#B7B7B7',
   darkGray: '#878787',
+  green: '#17CB49',
 };
 
 export default ThemeDefault;

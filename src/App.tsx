@@ -1,6 +1,9 @@
 import { ThemeProvider } from 'styled-components';
 import { BrowserRouter } from 'react-router-dom';
 
+// Hook import
+import { ChartsProvider } from './hooks/charts';
+
 // Theme import
 import theme from './styles/themes/default';
 import GlobalStyles from './styles/global';
@@ -12,8 +15,10 @@ function App() {
   return (
     <BrowserRouter>
       <ThemeProvider theme={theme}>
-        <Routes />
-        <GlobalStyles />
+        <ChartsProvider>
+          <Routes />
+          <GlobalStyles />
+        </ChartsProvider>
       </ThemeProvider>
     </BrowserRouter>
   );

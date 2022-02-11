@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   TableContainer,
   Table,
@@ -7,52 +7,71 @@ import {
   TableHead,
   TableRow,
 } from '@mui/material';
+import { format } from 'date-fns';
+import ptBR from 'date-fns/esm/locale/pt-BR/index.js';
+
+// Hook import
+import { useCharts } from '../../hooks/charts';
+
+// Util import
+import { statementInformation, formatCurrency } from '../../utils/index';
 
 // Component import
 import { Card } from '../Card';
 
-function createData(
-  name: string,
-  calories: number,
-  fat: number,
-  carbs: number,
-  protein: number,
-) {
-  return { name, calories, fat, carbs, protein };
-}
-
-const rows = [
-  createData('Frozen yoghurt', 159, 6.0, 24, 4.0),
-  createData('Ice cream sandwich', 237, 9.0, 37, 4.3),
-  createData('Eclair', 262, 16.0, 24, 6.0),
-];
-
 const Statement: React.FC = () => {
+  // Hooks
+  const { statementTableData } = useCharts();
+
+  const formattedDate = useMemo(() => {
+    if (!statementTableData[0]?.date) return 'Não foi possível mapear a data';
+
+    return format(new Date(statementTableData[0].date), 'MMMM - yyyy', {
+      locale: ptBR,
+    });
+  }, [statementTableData]);
+
   return (
-    <Card title="Extrato mensal" subtitle="Outubro - 2021">
-      <TableContainer style={{ marginBottom: 16 }}>
+    <Card title="Extrato mensal" subtitle={formattedDate} statementCard>
+      <TableContainer style={{ marginBottom: 10 }}>
         <Table aria-label="caption table">
           <TableHead>
             <TableRow>
-              <TableCell>Dessert (100g serving)</TableCell>
-              <TableCell align="right">Calories</TableCell>
-              <TableCell align="right">Fat&nbsp;(g)</TableCell>
-              <TableCell align="right">Carbs&nbsp;(g)</TableCell>
-              <TableCell align="right">Protein&nbsp;(g)</TableCell>
+              <TableCell>Tipo</TableCell>
+              <TableCell align="right">Valor</TableCell>
+              <TableCell align="right">Data</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows.map(row => (
-              <TableRow key={row.name}>
-                <TableCell component="th" scope="row">
-                  {row.name}
-                </TableCell>
-                <TableCell align="right">{row.calories}</TableCell>
-                <TableCell align="right">{row.fat}</TableCell>
-                <TableCell align="right">{row.carbs}</TableCell>
-                <TableCell align="right">{row.protein}</TableCell>
-              </TableRow>
-            ))}
+            {statementTableData.map(statement => {
+              const {
+                title,
+                icon: Icon,
+                statementColor,
+              } = statementInformation(statement.type);
+
+              return (
+                <TableRow key={statement.date}>
+                  <TableCell component="th" scope="row">
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Icon color={statementColor} />
+                      <span style={{ marginLeft: 10 }}>{title}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell component="th" scope="row" align="right">
+                    {formatCurrency(statement.value)}
+                  </TableCell>
+                  <TableCell align="right">
+                    {format(new Date(statement.date), 'dd/MM/yyyy')}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>

@@ -1,18 +1,8 @@
 import styled, { css } from 'styled-components';
 
-export const Container = styled.div<{
-  noData?: boolean;
-  statementCard?: boolean;
-}>`
+export const Container = styled.div<{ statementCard?: boolean }>`
   display: flex;
   flex-direction: column;
-
-  ${({ noData }) =>
-    !noData &&
-    css`
-      align-items: center;
-      justify-content: space-between;
-    `}
 
   background-color: ${({ theme }) => theme.white};
 
@@ -65,5 +55,16 @@ export const Title = styled.h3`
 
 export const Subtitle = styled.span`
   font-size: 0.9rem;
+  text-transform: capitalize;
   color: ${({ theme }) => theme.blue};
+`;
+
+export const Content = styled.main`
+  display: flex;
+  flex: 1;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
 `;
