@@ -45,7 +45,7 @@ const Goals: React.FC = () => {
   }, [goalsChartData]);
 
   return (
-    <Card title="Objetivos" subtitle="Setembro - Outubro - Novembro">
+    <Card title="Objetivos">
       {goalsChartData[0] && (
         <ResponsiveContainer width="100%" height="90%">
           <AreaChart
@@ -53,7 +53,7 @@ const Goals: React.FC = () => {
             margin={{
               top: 0,
               right: 0,
-              left: -15,
+              left: 10,
               bottom: 0,
             }}
           >

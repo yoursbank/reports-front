@@ -22,7 +22,7 @@ const Category: React.FC = () => {
   ];
 
   return (
-    <Card title="Gastos por categoria" subtitle="Outubro - 2021">
+    <Card title="Gastos por categoria">
       {categoryChartData[0] && (
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
