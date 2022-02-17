@@ -1,17 +1,5 @@
 import styled from 'styled-components';
 
-export const Container = styled.div`
-  position: relative;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  height: 100vh;
-
-  margin: 0 auto;
-`;
-
 export const Header = styled.header`
   position: absolute;
   z-index: -1;
@@ -21,6 +9,11 @@ export const Header = styled.header`
   width: 100%;
 
   background-color: ${({ theme }) => theme.yellow};
+
+  > div {
+    display: flex;
+    justify-content: flex-end;
+  }
 `;
 
 export const Title = styled.h1`
@@ -29,6 +22,11 @@ export const Title = styled.h1`
   color: ${({ theme }) => theme.black};
 
   max-width: 350px;
+  height: 100px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+
   margin: 2% auto 0;
 
   @media (max-width: 500px) {
@@ -38,10 +36,17 @@ export const Title = styled.h1`
 `;
 
 export const Content = styled.main`
-  margin-top: 170px;
+  margin: 120px auto 20px;
 
   padding: 0 1rem;
 
   width: 100%;
   max-width: 700px;
+`;
+
+export const ButtonsContainer = styled.div`
+  z-index: 1;
+
+  padding-top: 20px;
+  padding-left: 40px;
 `;

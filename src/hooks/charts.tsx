@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -12,9 +13,19 @@ import { api } from '../services/api';
 
 // Interface
 interface ChartsContextData {
+  usersListData: IUsersListDataProps[];
   goalsChartData: IGoalsChartDataProps[];
   categoryChartData: ICategoryChartDataProps[];
   statementTableData: IStatementTableDataProps[];
+
+  selectedUser: IUsersListDataProps | undefined;
+  handleSelectUser(user: IUsersListDataProps): void;
+
+  loading: boolean;
+  error: string;
+
+  page: number;
+  setPage(page: number): void;
 }
 
 interface IGoalsChartDataProps {
@@ -34,12 +45,26 @@ interface IStatementTableDataProps {
   type: string;
 }
 
+interface IUsersListDataProps {
+  name: string;
+  id: string;
+}
+
 // Context
 const ChartsContext = createContext<ChartsContextData>({} as ChartsContextData);
 
 // Provider
 const ChartsProvider: React.FC = ({ children }) => {
   // Local states
+  const [page, setPage] = useState(1);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  const [selectedUser, setSelectedUser] = useState<
+    IUsersListDataProps | undefined
+  >(undefined);
+
+  const [usersListData, setUsersListData] = useState<IUsersListDataProps[]>([]);
   const [goalsChartData, setGoalsChartData] = useState<IGoalsChartDataProps[]>(
     [],
   );
@@ -50,76 +75,132 @@ const ChartsProvider: React.FC = ({ children }) => {
     IStatementTableDataProps[]
   >([]);
 
-  api.defaults.headers.Authorization =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxOGMxZTc0OTA0OWQ1N2Y5ODlhMjRmZSIsImlhdCI6MTY0NDYwNzI0N30.ihRHbg8V5zQ83713SRd_8M4uAKZ64RJIqT8RnAxvTns';
+  /**
+   * Requests
+   */
 
   useEffect(() => {
-    const getGoalsReport = async () => {
-      const { data } = await api.get<IGoalsChartDataProps[]>(
-        '/reports/objectives',
-      );
+    try {
+      const getUsers = async () => {
+        setLoading(true);
 
-      if (!Array.isArray(data)) {
-        console.error('Os dados do objetivos não é conforme o esperado');
-        return;
-      }
+        const { data } = await api.get<IUsersListDataProps[]>(
+          `/reports/users/${page}/15`,
+        );
 
-      setGoalsChartData(data);
-    };
+        if (!Array.isArray(data)) throw new Error();
 
-    getGoalsReport();
-  }, []);
+        setUsersListData(prevUsers => [...prevUsers, ...data]);
+      };
 
-  useEffect(() => {
-    const getCategoryReport = async () => {
-      const { data } = await api.get<[{ porcentage: number; type: string }]>(
-        'reports/costs-category',
-      );
-
-      if (!Array.isArray(data)) {
-        console.error('Os dados do extrato não é conforme o esperado');
-        return;
-      }
-
-      const parsedData: ICategoryChartDataProps[] = Array.from(data).map(
-        item => {
-          const formattedType =
-            (item.type === 'TRANSPORT' && 'Transporte') ||
-            (item.type === 'STORES' && 'Lazer') ||
-            (item.type === 'SERVICE' && 'Investimentos') ||
-            (item.type === 'FOOD' && 'Alimentação');
-
-          return {
-            percent: Number(item.porcentage),
-            type: String(formattedType),
-          };
-        },
-      );
-
-      const hasValue = parsedData.every(item => item.percent > 0);
-
-      if (hasValue) setCategoryChartData(parsedData);
-      else setCategoryChartData([]);
-    };
-
-    getCategoryReport();
-  }, []);
+      getUsers();
+    } catch {
+      setError('Não foi possível buscar os usuários');
+    } finally {
+      setLoading(false);
+    }
+  }, [page]);
 
   useEffect(() => {
-    const getStatementReport = async () => {
-      const { data } = await api.get<IStatementTableDataProps[]>(
-        '/reports/movements',
+    try {
+      setLoading(true);
+
+      const getGoalsReport = async () => {
+        const { data } = await api.get<IGoalsChartDataProps[]>(
+          `/reports/objectives/${selectedUser?.id}`,
+        );
+
+        console.log('OBJETIVOS', data);
+
+        if (!Array.isArray(data)) throw new Error();
+
+        setGoalsChartData(data);
+      };
+
+      getGoalsReport();
+    } catch {
+      setError('Não foi possível buscar os objetivos do usuário selecionado');
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedUser]);
+
+  useEffect(() => {
+    try {
+      const getCategoryReport = async () => {
+        setLoading(true);
+
+        const { data } = await api.get<[{ porcentage: number; type: string }]>(
+          `reports/costs-category/${selectedUser?.id}`,
+        );
+
+        console.log('CATEGORIA', data);
+
+        if (!Array.isArray(data)) throw new Error();
+
+        const parsedData: ICategoryChartDataProps[] = Array.from(data).map(
+          item => {
+            const formattedType =
+              (item.type === 'TRANSPORT' && 'Transporte') ||
+              (item.type === 'STORES' && 'Lazer') ||
+              (item.type === 'SERVICE' && 'Investimentos') ||
+              (item.type === 'FOOD' && 'Alimentação');
+
+            return {
+              percent: Number(item.porcentage),
+              type: String(formattedType),
+            };
+          },
+        );
+
+        const hasValue = parsedData.every(item => item.percent > 0);
+
+        if (hasValue) setCategoryChartData(parsedData);
+        else setCategoryChartData([]);
+      };
+
+      getCategoryReport();
+    } catch {
+      setError('Não foi possível buscar os gastos do usuário selecionado');
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedUser]);
+
+  useEffect(() => {
+    try {
+      const getStatementReport = async () => {
+        setLoading(true);
+
+        const { data } = await api.get<IStatementTableDataProps[]>(
+          `/reports/movements/${selectedUser?.id}`,
+        );
+
+        console.log('EXTRATO', data);
+
+        if (!Array.isArray(data)) throw new Error();
+
+        setStatementTableData(data);
+      };
+
+      getStatementReport();
+    } catch {
+      setError(
+        'Não foi possível buscar os dados do extrato do usuário selecionado',
       );
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedUser]);
 
-      if (!Array.isArray(data)) {
-        console.error('Os dados do extrato não é conforme o esperado');
-        return;
-      }
+  /**
+   *
+   */
 
-      setStatementTableData(data);
-    };
+  const handleSelectUser = useCallback((user: IUsersListDataProps) => {
+    if (!user) return;
 
-    getStatementReport();
+    setSelectedUser(user);
   }, []);
 
   /**
@@ -128,11 +209,28 @@ const ChartsProvider: React.FC = ({ children }) => {
 
   const providerValue = useMemo(() => {
     return {
+      usersListData,
       goalsChartData,
       categoryChartData,
       statementTableData,
+      selectedUser,
+      handleSelectUser,
+      error,
+      loading,
+      page,
+      setPage,
     };
-  }, [categoryChartData, goalsChartData, statementTableData]);
+  }, [
+    categoryChartData,
+    goalsChartData,
+    statementTableData,
+    usersListData,
+    selectedUser,
+    handleSelectUser,
+    error,
+    loading,
+    page,
+  ]);
 
   /**
    *
@@ -156,3 +254,4 @@ function useCharts(): ChartsContextData {
 }
 
 export { useCharts, ChartsProvider };
+export type { IUsersListDataProps };

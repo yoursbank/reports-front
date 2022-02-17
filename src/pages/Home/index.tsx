@@ -3,22 +3,39 @@ import React from 'react';
 // Chart import
 import { Goals, Category, Statement } from '../../components/Charts';
 
+// Hook import
+import { useCharts } from '../../hooks/charts';
+
+// Component import
+import { ListUsers } from '../../components';
+
 // Style import
-import { Container, Header, Title, Content } from './styles';
+import { Header, Title, Content, ButtonsContainer } from './styles';
 
 const Home: React.FC = () => {
+  // Hooks
+  const { selectedUser } = useCharts();
+
   return (
-    <Container>
+    <>
       <Header>
-        <Title>Relatório mensal de Vitor Rubim</Title>
+        {selectedUser ? (
+          <Title>Relatório mensal de {selectedUser.name}</Title>
+        ) : (
+          <Title>Selecione um usuário</Title>
+        )}
       </Header>
+
+      <ButtonsContainer>
+        <ListUsers />
+      </ButtonsContainer>
 
       <Content>
         <Goals />
         <Category />
         <Statement />
       </Content>
-    </Container>
+    </>
   );
 };
 
