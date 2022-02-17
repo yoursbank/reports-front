@@ -85,7 +85,7 @@ const ChartsProvider: React.FC = ({ children }) => {
         setLoading(true);
 
         const { data } = await api.get<IUsersListDataProps[]>(
-          `/reports/users/${page}/15`,
+          `/reports/users/${page}/10`,
         );
 
         if (!Array.isArray(data)) throw new Error();
@@ -102,94 +102,94 @@ const ChartsProvider: React.FC = ({ children }) => {
   }, [page]);
 
   useEffect(() => {
-    try {
-      setLoading(true);
+    if (selectedUser?.id) {
+      try {
+        setLoading(true);
 
-      const getGoalsReport = async () => {
-        const { data } = await api.get<IGoalsChartDataProps[]>(
-          `/reports/objectives/${selectedUser?.id}`,
-        );
+        const getGoalsReport = async () => {
+          const { data } = await api.get<IGoalsChartDataProps[]>(
+            `/reports/objectives/${selectedUser?.id}`,
+          );
 
-        console.log('OBJETIVOS', data);
+          if (!Array.isArray(data)) throw new Error();
 
-        if (!Array.isArray(data)) throw new Error();
+          setGoalsChartData(data);
+        };
 
-        setGoalsChartData(data);
-      };
-
-      getGoalsReport();
-    } catch {
-      setError('Não foi possível buscar os objetivos do usuário selecionado');
-    } finally {
-      setLoading(false);
+        getGoalsReport();
+      } catch {
+        setError('Não foi possível buscar os objetivos do usuário selecionado');
+      } finally {
+        setLoading(false);
+      }
     }
   }, [selectedUser]);
 
   useEffect(() => {
-    try {
-      const getCategoryReport = async () => {
-        setLoading(true);
+    if (selectedUser?.id) {
+      try {
+        const getCategoryReport = async () => {
+          setLoading(true);
 
-        const { data } = await api.get<[{ porcentage: number; type: string }]>(
-          `reports/costs-category/${selectedUser?.id}`,
-        );
+          const { data } = await api.get<
+            [{ porcentage: number; type: string }]
+          >(`reports/costs-category/${selectedUser?.id}`);
 
-        console.log('CATEGORIA', data);
+          if (!Array.isArray(data)) throw new Error();
 
-        if (!Array.isArray(data)) throw new Error();
+          const parsedData: ICategoryChartDataProps[] = Array.from(data).map(
+            item => {
+              const formattedType =
+                (item.type === 'TRANSPORT' && 'Transporte') ||
+                (item.type === 'STORES' && 'Lazer') ||
+                (item.type === 'SERVICE' && 'Investimentos') ||
+                (item.type === 'FOOD' && 'Alimentação');
 
-        const parsedData: ICategoryChartDataProps[] = Array.from(data).map(
-          item => {
-            const formattedType =
-              (item.type === 'TRANSPORT' && 'Transporte') ||
-              (item.type === 'STORES' && 'Lazer') ||
-              (item.type === 'SERVICE' && 'Investimentos') ||
-              (item.type === 'FOOD' && 'Alimentação');
+              return {
+                percent: Number(item.porcentage),
+                type: String(formattedType),
+              };
+            },
+          );
 
-            return {
-              percent: Number(item.porcentage),
-              type: String(formattedType),
-            };
-          },
-        );
+          // const hasValue = parsedData.every(item => item.percent > 0);
 
-        const hasValue = parsedData.every(item => item.percent > 0);
+          setCategoryChartData(parsedData);
+          // else setCategoryChartData([]);
+        };
 
-        if (hasValue) setCategoryChartData(parsedData);
-        else setCategoryChartData([]);
-      };
-
-      getCategoryReport();
-    } catch {
-      setError('Não foi possível buscar os gastos do usuário selecionado');
-    } finally {
-      setLoading(false);
+        getCategoryReport();
+      } catch {
+        setError('Não foi possível buscar os gastos do usuário selecionado');
+      } finally {
+        setLoading(false);
+      }
     }
   }, [selectedUser]);
 
   useEffect(() => {
-    try {
-      const getStatementReport = async () => {
-        setLoading(true);
+    if (selectedUser?.id) {
+      try {
+        const getStatementReport = async () => {
+          setLoading(true);
 
-        const { data } = await api.get<IStatementTableDataProps[]>(
-          `/reports/movements/${selectedUser?.id}`,
+          const { data } = await api.get<IStatementTableDataProps[]>(
+            `/reports/movements/${selectedUser?.id}`,
+          );
+
+          if (!Array.isArray(data)) throw new Error();
+
+          setStatementTableData(data);
+        };
+
+        getStatementReport();
+      } catch {
+        setError(
+          'Não foi possível buscar os dados do extrato do usuário selecionado',
         );
-
-        console.log('EXTRATO', data);
-
-        if (!Array.isArray(data)) throw new Error();
-
-        setStatementTableData(data);
-      };
-
-      getStatementReport();
-    } catch {
-      setError(
-        'Não foi possível buscar os dados do extrato do usuário selecionado',
-      );
-    } finally {
-      setLoading(false);
+      } finally {
+        setLoading(false);
+      }
     }
   }, [selectedUser]);
 

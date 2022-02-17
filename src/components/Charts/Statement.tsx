@@ -56,7 +56,7 @@ const Statement: React.FC = () => {
                       </div>
                     </TableCell>
                     <TableCell component="th" scope="row" align="right">
-                      <p style={{ color: statementColor }}>
+                      <p style={{ color: statementColor, minWidth: 100 }}>
                         {formatCurrency(statement.value)}
                       </p>
                     </TableCell>

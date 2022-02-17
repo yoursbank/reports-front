@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import html2canvas from 'html2canvas';
 import {
   Button,
@@ -20,6 +20,7 @@ import { useCharts } from '../../hooks/charts';
 
 // Style import
 import { ListFooter } from './styles';
+import { api } from '../../services/api';
 
 export const ListUsers: React.FC = () => {
   // Hooks
@@ -39,6 +40,7 @@ export const ListUsers: React.FC = () => {
   const [image, setImage] = useState('');
   const [open, setOpen] = useState(false);
   const [hideButtons, setHideButtons] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
 
   const handleClose = (event: Event) => {
     if (
@@ -51,6 +53,33 @@ export const ListUsers: React.FC = () => {
     setOpen(false);
   };
 
+  const handleSubmit = useCallback(async () => {
+    if (selectedUser?.id) {
+      try {
+        setSubmitLoading(true);
+
+        // Prepare data
+        const data = new FormData();
+
+        data.append(
+          'picture',
+          new Blob([JSON.stringify(image)], { type: 'image/png' }),
+          `${selectedUser.name}-report.png`,
+        );
+
+        await api.post(`/reports/email/${selectedUser.id}`, data, {
+          headers: { 'content-type': 'multipart/form-data' },
+        });
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Não foi possível enviar imagem ao backend', error);
+      } finally {
+        setSubmitLoading(false);
+        setImage('');
+      }
+    }
+  }, [selectedUser, image]);
+
   const handleScreenshot = () => {
     setHideButtons(true);
 
@@ -59,8 +88,10 @@ export const ListUsers: React.FC = () => {
     if (element) {
       html2canvas(element, {})
         .then((canvas: HTMLCanvasElement) => {
-          const url: string = canvas.toDataURL();
+          const url: string = canvas.toDataURL('image/png');
           setImage(url);
+
+          handleSubmit();
         })
         .finally(() => {
           setHideButtons(false);
@@ -72,14 +103,14 @@ export const ListUsers: React.FC = () => {
     <>
       {!hideButtons && (
         <ButtonGroup variant="contained" ref={anchorRef}>
-          <Button onClick={handleScreenshot}>
+          <Button onClick={handleScreenshot} disabled={!selectedUser?.id}>
             <BiCamera />
           </Button>
 
           <LoadingButton
             size="small"
             onClick={() => setOpen(prevOpen => !prevOpen)}
-            loading={loading}
+            loading={loading || submitLoading}
             variant="contained"
           >
             Usuários
@@ -108,7 +139,7 @@ export const ListUsers: React.FC = () => {
                 <MenuList>
                   {usersListData.map(user => (
                     <MenuItem
-                      key={user.id}
+                      key={`${user.name}-${user.id}`}
                       selected={selectedUser?.id === user.id}
                       onClick={() => {
                         handleSelectUser(user);
@@ -122,7 +153,7 @@ export const ListUsers: React.FC = () => {
                   <ListFooter>
                     <LoadingButton
                       size="small"
-                      loading={loading}
+                      loading={loading || submitLoading}
                       variant="contained"
                       onClick={() => setPage(page + 1)}
                     >
@@ -135,8 +166,6 @@ export const ListUsers: React.FC = () => {
           </Grow>
         )}
       </Popper>
-
-      <img src={image} alt="" />
     </>
   );
 };

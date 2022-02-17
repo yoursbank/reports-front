@@ -19,13 +19,19 @@ interface ICardProps {
 const Card = ({ title, statementCard, children }: ICardProps) => {
   const formattedDate = useMemo(() => {
     const date = new Date();
-    const subMonth = subMonths(date, 1);
+    const initialMonth = subMonths(date, 1);
 
     if (!date) return 'Não foi possível mapear a data';
 
-    return format(new Date(subMonth), 'MMMM - yyyy', {
+    const initialMonthFormatted = format(new Date(initialMonth), 'MMMM -', {
       locale: ptBR,
     });
+
+    const finalMonthFormatted = format(new Date(date), ' MMMM - yyyy', {
+      locale: ptBR,
+    });
+
+    return initialMonthFormatted + finalMonthFormatted;
   }, []);
 
   return (
