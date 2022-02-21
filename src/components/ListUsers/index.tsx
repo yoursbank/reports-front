@@ -1,3 +1,5 @@
+/* eslint-disable no-plusplus */
+/* eslint-disable no-console */
 import React, { useRef, useState, useCallback } from 'react';
 import html2canvas from 'html2canvas';
 import {
@@ -14,6 +16,9 @@ import LoadingButton from '@mui/lab/LoadingButton';
 
 // Icon import
 import { BsCaretDownFill, BiCamera } from '../../utils/icons';
+
+// Component import
+import { EmptyText } from '../EmptyText';
 
 // Hook import
 import { useCharts } from '../../hooks/charts';
@@ -53,6 +58,21 @@ export const ListUsers: React.FC = () => {
     setOpen(false);
   };
 
+  function DataURIToBlob() {
+    const splitDataURI = image.split(',');
+    const byteString =
+      splitDataURI[0].indexOf('base64') >= 0
+        ? atob(splitDataURI[1])
+        : decodeURI(splitDataURI[1]);
+    const mimeString = splitDataURI[0].split(':')[1].split(';')[0];
+
+    const ia = new Uint8Array(byteString.length);
+    for (let i = 0; i < byteString.length; i++)
+      ia[i] = byteString.charCodeAt(i);
+
+    return new Blob([ia], { type: mimeString });
+  }
+
   const handleSubmit = useCallback(async () => {
     if (selectedUser?.id) {
       try {
@@ -61,24 +81,24 @@ export const ListUsers: React.FC = () => {
         // Prepare data
         const data = new FormData();
 
-        data.append(
-          'picture',
-          new Blob([JSON.stringify(image)], { type: 'image/png' }),
-          `${selectedUser.name}-report.png`,
-        );
+        console.log(image);
+
+        const file = DataURIToBlob();
+
+        data.append('picture', file);
 
         await api.post(`/reports/email/${selectedUser.id}`, data, {
           headers: { 'content-type': 'multipart/form-data' },
         });
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.error('Não foi possível enviar imagem ao backend', error);
       } finally {
         setSubmitLoading(false);
         setImage('');
       }
     }
-  }, [selectedUser, image]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [DataURIToBlob, image]);
 
   const handleScreenshot = () => {
     setHideButtons(true);
@@ -89,6 +109,7 @@ export const ListUsers: React.FC = () => {
       html2canvas(element, {})
         .then((canvas: HTMLCanvasElement) => {
           const url: string = canvas.toDataURL('image/png');
+
           setImage(url);
 
           handleSubmit();
@@ -137,6 +158,8 @@ export const ListUsers: React.FC = () => {
             <Paper>
               <ClickAwayListener onClickAway={handleClose}>
                 <MenuList>
+                  {!usersListData[0]?.id && <EmptyText />}
+
                   {usersListData.map(user => (
                     <MenuItem
                       key={`${user.name}-${user.id}`}
@@ -150,16 +173,18 @@ export const ListUsers: React.FC = () => {
                     </MenuItem>
                   ))}
 
-                  <ListFooter>
-                    <LoadingButton
-                      size="small"
-                      loading={loading || submitLoading}
-                      variant="contained"
-                      onClick={() => setPage(page + 1)}
-                    >
-                      Carregar mais
-                    </LoadingButton>
-                  </ListFooter>
+                  {usersListData[0]?.id && (
+                    <ListFooter>
+                      <LoadingButton
+                        size="small"
+                        loading={loading || submitLoading}
+                        variant="contained"
+                        onClick={() => setPage(page + 1)}
+                      >
+                        Carregar mais
+                      </LoadingButton>
+                    </ListFooter>
+                  )}
                 </MenuList>
               </ClickAwayListener>
             </Paper>
